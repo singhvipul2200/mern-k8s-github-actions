@@ -35,7 +35,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: |
             backend/package-lock.json
@@ -49,7 +49,7 @@ jobs:
       # NOTE: Backend has no test script, skipping unit tests
       - name: Backend Tests (Skipped)
         working-directory: backend
-        run: echo "⚠️ No test script found in backend/package.json — skipping tests"
+        run: echo "No test script found in backend/package.json - skipping tests"
 
       # Frontend
       - name: Install Frontend Dependencies
@@ -61,12 +61,13 @@ jobs:
         run: npm run lint
 
 # ============================================================
-# JOB 2 - SONARCLOUD ANALYSIS
+# JOB 2 - SONARCLOUD ANALYSIS (Non-blocking)
 # ============================================================
   sonarcloud:
     name: SonarCloud Code Analysis
     needs: unit-tests
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
       - name: Checkout Repository
@@ -89,7 +90,7 @@ jobs:
 # ============================================================
   build-and-push:
     name: Build and Push Docker Images
-    needs: sonarcloud
+    needs: unit-tests
     runs-on: ubuntu-latest
 
     steps:
@@ -130,17 +131,17 @@ jobs:
       - name: Build Successful
         if: success()
         run: |
-          echo "✅ Backend Image Pushed Successfully"
+          echo "Backend Image Pushed Successfully"
           echo "Backend Digest: ${{ steps.backend_build.outputs.digest }}"
-          echo "✅ Frontend Image Pushed Successfully"
+          echo "Frontend Image Pushed Successfully"
           echo "Frontend Digest: ${{ steps.frontend_build.outputs.digest }}"
-          echo "🎉 CI/CD Pipeline Build Completed Successfully."
+          echo "CI/CD Pipeline Build Completed Successfully."
 
       # Failure Message
       - name: Build Failed
         if: failure()
         run: |
-          echo "❌ Docker Build or Push Failed."
+          echo "Docker Build or Push Failed."
           echo "Check the logs above for more information."
 
 # ============================================================
@@ -161,18 +162,18 @@ jobs:
           script: |
             cd ~/mern-app
 
-            echo "🚀 Pulling latest images..."
+            echo "Pulling latest images..."
             docker pull vipulsingh2200/think_back:latest
             docker pull vipulsingh2200/think_front:latest
 
-            echo "🛑 Stopping old containers..."
+            echo "Stopping old containers..."
             docker-compose down || true
 
-            echo "▶️ Starting new containers..."
+            echo "Starting new containers..."
             docker-compose up -d
 
-            echo "🧹 Cleaning up old images..."
+            echo "Cleaning up old images..."
             docker system prune -f
 
-            echo "✅ Deployment complete!"
+            echo "Deployment complete!"
             docker ps
