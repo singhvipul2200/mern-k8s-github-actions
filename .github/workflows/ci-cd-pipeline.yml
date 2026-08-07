@@ -61,7 +61,7 @@ jobs:
         run: npm run lint
 
 # ============================================================
-# JOB 2 - SONARCLOUD ANALYSIS (Non-blocking)
+# JOB 2 - SONARCLOUD ANALYSIS (Non-blocking, runs after unit-tests)
 # ============================================================
   sonarcloud:
     name: SonarCloud Code Analysis
@@ -86,11 +86,11 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 # ============================================================
-# JOB 3 - BUILD & PUSH DOCKER IMAGES
+# JOB 3 - BUILD & PUSH DOCKER IMAGES (runs after sonarcloud)
 # ============================================================
   build-and-push:
     name: Build and Push Docker Images
-    needs: unit-tests
+    needs: [unit-tests, sonarcloud]
     runs-on: ubuntu-latest
 
     steps:
@@ -145,7 +145,7 @@ jobs:
           echo "Check the logs above for more information."
 
 # ============================================================
-# JOB 4 - DEPLOY TO AWS EC2
+# JOB 4 - DEPLOY TO AWS EC2 (runs after build-and-push)
 # ============================================================
   deploy:
     name: Deploy to AWS EC2
